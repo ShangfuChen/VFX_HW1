@@ -1,4 +1,4 @@
-
+%% Input image
 height = 768;
 width = 1024;
 numPics = 13;
@@ -19,6 +19,7 @@ for i=1:numPics;
  imgCell{i} = imread(s);
 end
 
+%% calculate g function
 % create the image array X(pixel, images)
 numPixels = 50;
 for i=1:numPixels;
@@ -49,25 +50,54 @@ w(129:256)=(128:-1:1);
 [gr, lEr] = gsolve(Zr,B,l,w);
 [gg, lEg] = gsolve(Zg,B,l,w);
 [gb, lEb] = gsolve(Zb,B,l,w);
+gcell = cell(3,1);
+gcell{1} = gr;
+gcell{2} = gg;
+gcell{3} = gb;
 
-hdrImg = zeros(height,width);
-for i = 1:height;
-    for j = 1:width;
-        wij = 0;
-        lEg = 0;
-        for k = 1:numPics;
-            lE = gg(imgCell{k}(i,j,2)+1) - B(k);
-            lEg = w(imgCell{k}(i,j,2)+1)*lE + lEg;
-            wij = wij + w(imgCell{k}(i,j,2)+1); 
+
+hdrImg = zeros(height,width,3);
+for c = 1:3;
+    for i = 1:height;
+        for j = 1:width;
+            wij = 0;
+            lEg = 0;
+            for k = 1:numPics;
+                lE = gcell{c}(imgCell{k}(i,j,2)+1) - B(k);
+                lEg = w(imgCell{k}(i,j,2)+1)*lE + lEg;
+                wij = wij + w(imgCell{k}(i,j,2)+1); 
+            end
+            lEg = lEg/wij;
+            hdrImg(i,j,c) = exp(lEg);
         end
-        lEg = lEg/wij;
-        hdrImg(i,j) = lEg;
     end
 end
+minPix = min(min(min(hdrImg)));
+hdrImg = hdrImg/minPix;
+
+
 imshow(hdrImg)
 colormap (jet)
 caxis auto
 timeCost = cputime - t;
+%max(max(hdrImg))
+%min(min(hdrImg))
+%% Tone mapping
+for c = 1:3;
+    hdr = hdrImg(:,:,c);
+    mapImg(:,:,c) = toneMapping(hdr);
+end
+%max(max(mapImg))
+%min(min(mapImg))
+mapImg = round(mapImg*256);
+mapImg = uint8(mapImg);
+hdr = mapImg(:,:,2);
+imshow(hdr)
+imshow(mapImg)
+imwrite(mapImg, 'hdrImg.bmp');
+
+%colormap (jet)
+caxis auto
 % plot(gr,'r')
 % figure
 % plot(gg,'g')
