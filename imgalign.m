@@ -58,7 +58,7 @@ for i = 1:iter;
     mw = mw + move(index,:,2);
     imgCell{i,2} = imtranslate(imgCell{i,2},move(index,:));
 end
-    % [rimg1,rimg2] = cutimg(imgCell{iter,1},imgCell{iter,2},[mh,mw]); 
+    [rimg1,rimg2] = cutimg(imgCell{iter,1},imgCell{iter,2},[mh,mw]); 
 end
 
 function [r1,r2] = cutimg(img1,img2,m)
