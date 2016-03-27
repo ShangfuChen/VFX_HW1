@@ -15,9 +15,9 @@ mw = 0;
 % place.
 
 for i = 1:iter;
-    mh = 2 * mh;
     mw = 2 * mw;
-    imgCell{i,2} = imtranslate(imgCell{i,2},[mh,mw]);
+    mh = 2 * mh;
+    imgCell{i,2} = imtranslate(imgCell{i,2},[mw,mh]);
     % [imgCell{i,1},imgCell{i,2}] = cutimg(imgCell{i,1},imgCell{i,2},[mh,mw]);
     gimg1 = rgb2gray(imgCell{i,1});
     gimg2 = rgb2gray(imgCell{i,2});
@@ -31,7 +31,7 @@ for i = 1:iter;
     excmap1 = ones(size(gimg1));
     excmap2 = ones(size(gimg2));
 
-    [h w] = size(gimg1);
+    [h,w] = size(gimg1);
     for j = 1:h*w ;
         if gimg1(j) > thres1; bitmap1(j) = 1; end;
         if gimg2(j) > thres2; bitmap2(j) = 1; end;
@@ -48,23 +48,24 @@ for i = 1:iter;
     move(7,:) = [-1,1];
     move(8,:) = [0,1];
     move(9,:) = [1,1];
-
+    value = zeros(9,1);
     for j = 1:9;
         difference = xor(bitmap1,imtranslate(bitmap2,move(j,:))) & excmap1 & excmap2;
         value(j) = sum(difference(:));
     end
+    value
     [minValue,index] = min(value);
-    mh = mh + move(index,:,1);
-    mw = mw + move(index,:,2);
+    mw = mw + move(index,:,1);
+    mh = mh + move(index,:,2);
     imgCell{i,2} = imtranslate(imgCell{i,2},move(index,:));
 end
-    [rimg1,rimg2] = cutimg(imgCell{iter,1},imgCell{iter,2},[mh,mw]); 
+    [rimg1,rimg2] = cutimg(imgCell{iter,1},imgCell{iter,2},[mw,mh]);
 end
 
 function [r1,r2] = cutimg(img1,img2,m)
     % height lower bound = hlb
-    mh = m(1);
-    mw = m(2);
+    mw = m(1);
+    mh = m(2);
     hlb = 1; wlb = 1;
     hub = size(img1,1);
     wub = size(img1,2);
