@@ -1,8 +1,18 @@
-function [rimg1,rimg2] = imgalign(f1,f2,iter)
+function [rimg1,rimg2] = imgalign(img1,img2,iter)
+
+s = size(img1) ~= size(img2);
+if s(1)|s(2);
+    [h1,w1,c] = size(img1);
+    [h2,w2,c] = size(img2);
+    if h2 < h1 | w2 < w1;
+        'Image2 is smaller than image1'
+    end;
+    img2 = img2(1:h1,1:w1,:);
+end;
 
 imgCell = cell(iter,2);
-imgCell{iter,1} = imread (f1);
-imgCell{iter,2} = imread (f2);
+imgCell{iter,1} = img1;
+imgCell{iter,2} = img2;
 for i = 1:iter-1;
     imgCell{iter-i,1} = imresize(imgCell{iter-i+1,1},0.5);
     imgCell{iter-i,2} = imresize(imgCell{iter-i+1,2},0.5);
@@ -18,7 +28,7 @@ for i = 1:iter;
     mw = 2 * mw;
     mh = 2 * mh;
     imgCell{i,2} = imtranslate(imgCell{i,2},[mw,mh]);
-    % [imgCell{i,1},imgCell{i,2}] = cutimg(imgCell{i,1},imgCell{i,2},[mh,mw]);
+    
     gimg1 = rgb2gray(imgCell{i,1});
     gimg2 = rgb2gray(imgCell{i,2});
 
@@ -49,11 +59,12 @@ for i = 1:iter;
     move(8,:) = [0,1];
     move(9,:) = [1,1];
     value = zeros(9,1);
+    % size(bitmap1)
+    % size(bitmap2)
     for j = 1:9;
         difference = xor(bitmap1,imtranslate(bitmap2,move(j,:))) & excmap1 & excmap2;
         value(j) = sum(difference(:));
     end
-    value
     [minValue,index] = min(value);
     mw = mw + move(index,:,1);
     mh = mh + move(index,:,2);
