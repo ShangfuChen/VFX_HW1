@@ -1,19 +1,19 @@
-function [mapImg]=toneMapping(img)
+function [mapImg]=toneMapping(img, lightness)
    m = size(img);
    height = m(1);
    width = m(2); 
-   img = exp(1)*img;
+   imgA = exp(1)*img;
    %min(min(img))
    N = height*width;
    Lw = 0;
    for i = 1:height;
        for j = 1:width;
-           Lw = log( img(i,j) ) + Lw;
+           Lw = log( imgA(i,j) ) + Lw;
        end
    end
    Lw = Lw/N;
-   a = 0.18;
-   Lm = a*img/Lw;
+   a = lightness;
+   Lm = a*imgA/Lw;
   
    Lwhite = max(max(Lm));
    %
@@ -25,4 +25,6 @@ function [mapImg]=toneMapping(img)
    end
    %
    mapImg = Lm;
+   
 end
+
