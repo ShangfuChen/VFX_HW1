@@ -1,10 +1,11 @@
 %% Input image
 clear
+close all
 %height = 3456;
 %width = 5184;
 %input variables
-numPics = 10;
-file_name = 'pic_ex';
+numPics = 7;
+file_name = 'vfx/pic_14';
 zmin = 1;
 zmax = 256;
 imgCell = cell( numPics, 1 );
@@ -23,6 +24,7 @@ for i=1:numPics;
  s3 = '.jpg';
  s = [ file_name s1 s2 s3 ];
  imgCell{i} = imread(s);
+ imgCell{i} = imresize(imgCell{i},0.3);
  info = imfinfo(s);
  B(i) = info.DigitalCamera.ExposureTime;
 end
@@ -34,7 +36,9 @@ for time = 1:2;
      [ imgCell{1} , imgCell{i} ] = imgalign(imgCell{1}, imgCell{i}, iterator );
     end
 end
-
+'finish alignment.'
+time_cost = cputime - t
+t = cputime;
 
 %% calculate g function
 % create the image array X(pixel, images)
@@ -72,13 +76,14 @@ w(129:256)=(128:-1:1);
 [gg, lEg] = gsolve(Zg,B,l,w);
 [gb, lEb] = gsolve(Zb,B,l,w);
 
-solved = 'G function get'
+'G function get'
+time_cost = cputime - t
+t = cputime;
 
 gcell = cell(3,1);
 gcell{1} = gr;
 gcell{2} = gg;
 gcell{3} = gb;
-
 
 hdrImg = zeros(height,width,3);
 for c = 1:3;
@@ -86,54 +91,61 @@ for c = 1:3;
         for j = 1:width;
             wij = 0;
             lEg = 0;
-            for k = 1:numPics;
+            for k = 2:numPics;
                 lE = gcell{c}(imgCell{k}(i,j,c)+1) - B(k);
                 lEg = w(imgCell{k}(i,j,c)+1)*lE + lEg;
                 wij = wij + w(imgCell{k}(i,j,c)+1); 
             end
             lEg = lEg/wij;
             hdrImg(i,j,c) = exp(lEg);
-            %hdrImg(i,j,c) = lEg;
+           % hdrImg(i,j,c) = lEg;
         end
     end
 end
 
+%{ for histogram picture
+hdrImgG = hdrImg(:,:,2);
+imshow(hdrImgG);
+colormap jet
+caxis auto
+%}
+
+
 'finish the hdr image'
+time_cost = cputime - t
 
 %% do tone mappping by matlab
-    maxPix = max(max(max(hdrImg(:,:,1))));
-    hdrImg2 = hdrImg/maxPix;
+maxPix = max(max(max(hdrImg(:,:,:))));
+hdrImg2 = hdrImg/maxPix;
 
 rgbImg = tonemap(hdrImg2);
 figure;
 imshow(rgbImg)
-
-%hdrIm = hdrImg2(:,:,1);
-%figure;
-%imshow(hdrIm)
-
-
+matlab_name = [ file_name '/matlab_rgbImg.bmp' ];
+imwrite(rgbImg, matlab_name);
 
 %% print out the map
 
-hdrIm = hdrImg(:,:,1);
-
-figure
-colormap (jet)
-caxis auto
-imshow(hdrImg)
+% hdrIm = hdrImg(:,:,1);
+% figure
+% colormap (jet)
+% caxis auto
+% imshow(hdrImg)
 
 %% other's tonemapping
 %fc_tonemap(hdrImg);
 
-
+% calculate dynamic range
+hdrImg3 = hdrImg(:,:,1)*0.299 + hdrImg(:,:,2)*0.587 + hdrImg(:,:,3)*0.114;
+maxPix = max(max(hdrImg3));
+minPix = min(min(hdrImg3));
 %% Tone mapping 
 
+t = cputime;
 % Normalization
 % trying how to normalize
 minP = min(min(hdrImg));
 for c=1:3
-    minPix = min(min(hdrImg(:,:,c)))
     %maxPix = max(max(hdrImg(:,:,c)))
     %hdrImg(:,:,c) = hdrImg(:,:,c)/minPix;
     hdrImg(:,:,c) = hdrImg(:,:,c)/min(minP);
@@ -142,7 +154,7 @@ end
 %%
 %throw into tone mapping function
 
-lightness = [ 0.01, 0.015, 0.02 ]; 
+lightness = [ 0.06, 0.08, 0.1, 0.12,0.14]; 
 for num = 1 : size(lightness,2);
     mapImg = zeros(height, width, 3);
     for c = 1:3;
@@ -150,27 +162,28 @@ for num = 1 : size(lightness,2);
         mapImg(:,:,c) = toneMapping(hdrI,lightness(num));
         %mapImg(:,:,c) = toneMapping2(hdrI);
     end
-    max(max(mapImg))
-    min(min(mapImg))
+    max(max(mapImg));
+    min(min(mapImg));
     mapImg = round(mapImg*256);
     mapImg = uint8(mapImg);
-    figure;
-    imshow(mapImg)
-    output_name = [ file_name num2str(lightness(num)) '_hdrImg.bmp' ];
+    % figure;
+    % imshow(mapImg)
+    output_name = [ file_name '/' num2str(lightness(num)) '_hdrImg.bmp' ];
     imwrite(mapImg, output_name);
 end
-%colormap (jet)
-% plot(gr,'r')
-% figure
-% plot(gg,'g')
-% figure
-% plot(gb,'b')
 
-%img = imread(s);
-%size(img);
-%imshow(img);
+'finish tone mapping'
+time_cost = cputime - t
 
 %% show non-linear curve
 figure
 plot(gg);
-time_cost = cputime - t;
+title('gg');
+figure
+plot(gr);
+title('gr');
+figure
+plot(gb);
+title('gb');
+
+

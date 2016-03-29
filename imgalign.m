@@ -34,7 +34,7 @@ for i = 1:iter;
 
     thres1 = median(gimg1(:));
     thres2 = median(gimg2(:));
-    N = 10;
+    N = 20;
 
     bitmap1 = zeros(size(gimg1));
     bitmap2 = zeros(size(gimg2));
@@ -48,6 +48,10 @@ for i = 1:iter;
         if gimg1(j) > thres1 - N && gimg1(j) < thres1 + N; excmap1(j) = 0; end;
         if gimg2(j) > thres2 - N && gimg2(j) < thres2 + N; excmap2(j) = 0; end;
     end;
+    % imwrite(bitmap1,['bitmap1_' num2str(i) '.jpg']);
+    % imwrite(bitmap2,['bitmap2_' num2str(i) '.jpg']);
+    % imwrite(excmap1,['excmap1_' num2str(i) '.jpg']);
+    % imwrite(excmap2,['excmap2_' num2str(i) '.jpg']);
     move = zeros(9,1,2);
     move(1,:) = [-1,-1];
     move(2,:) = [0,-1];

@@ -2,7 +2,7 @@ function [mapImg]=toneMapping(img, lightness)
    m = size(img);
    height = m(1);
    width = m(2); 
-   imgA = exp(1)*img;
+   imgA = exp(1)+img;
    %min(min(img))
    N = height*width;
    Lw = 0;
